@@ -1,18 +1,58 @@
 #!/usr/bin/env python3
 import argparse
+import os
 import psutil 
 import time
+import ctypes
+import platform
 
 parser = argparse.ArgumentParser(description='System monitoring tool')
 
 parser.add_argument('--cpu', action='store_true', help='Shows CPU usage')
 parser.add_argument('--ram', action='store_true', help='Shows RAM usage')
 parser.add_argument('--disk', action='store_true', help='Shows disk usage')
-parser.add_argument('--btime', action='store_true', help='Shows returns system boot time')
+parser.add_argument('--uptime', action='store_true', help='Shows returns system boot time')
 parser.add_argument('--avgl', action='store_true', help='Shows average system load')
 parser.add_argument('--mcpu',action='store_true', help='Shows most used cpu process (must be used as sudo)')
 
 args = parser.parse_args()
+
+def get_system_uptime():
+
+    system=platform.system()
+    if(system == "Linux"):
+        t = os.popen('uptime -p').read()[:-1]
+        print(f"System uptime: {t}")
+
+    
+    elif(system == "Windows"):
+        lib = ctypes.windll.kernel32
+        t = lib.GetTickCount64()
+        t = int(str(t)[:-3])
+        mins, sec = divmod(t, 60)
+        hour, mins = divmod(mins, 60)
+        days, hour = divmod(hour, 24)
+        print(f"{days} days, {hour:02}:{mins:02}:{sec:02}")
+
+    elif(system == "Darwin"):
+        t = os.popen('uptime').read()
+        uptime_part = t.split(" up ")[1].split(",")
+        up_time = uptime_part[0].strip()
+
+        #print(f"System uptime: {up_time}")
+
+        if(":" in up_time):
+            hour_part = up_time.split(":")[0]
+            min_part = up_time.split(":")[1]
+            print(f"{hour_part} hours, {min_part} minutes")
+            
+        elif "day" in up_time:
+            print(f"System uptime: {up_time}")
+        else:
+            print(f"System uptime: {up_time}")
+    
+    else:
+        print("Unsupported OS.")
 
 def print_most_cpu_usage():
     
@@ -20,13 +60,13 @@ def print_most_cpu_usage():
         p.cpu_percent(None)
 
     time.sleep(1)
+
     util = list(psutil.process_iter(['pid', 'name', 'cpu_percent']))
     new_util = []
     for p in util:
         if p.info['cpu_percent'] is not None:
             new_util.append(p)
 
-    #util = [p for p in util if p.info['cpu_percent'] is not None]
     top_util = sorted(new_util, key=lambda p: p.info['cpu_percent'], reverse=True) [:10]
     for p in top_util:
         print(f"Most used CPU by: {p.info['name']} \n Using: {p.info['cpu_percent']}")
@@ -38,7 +78,7 @@ features = {
     
     'disk': lambda: print(f"Disk usage: {psutil.disk_usage('/').percent}"),
     
-    'btime': lambda: print(f"Boot time: {psutil.boot_time()}"),
+    'uptime':  get_system_uptime,
     
     'avgl': lambda: print(f"Load average (1, 5, 15 min): {psutil.getloadavg()}") ,#else print("Load average not supported on this OS."),
     
