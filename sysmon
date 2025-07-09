@@ -5,6 +5,9 @@ import psutil
 import time
 import ctypes
 import platform
+from colorama import Fore, Style, init
+
+init(autoreset=True)
 
 parser = argparse.ArgumentParser(description='System monitoring tool')
 
@@ -71,16 +74,54 @@ def print_most_cpu_usage():
     for p in top_util:
         print(f"Most used CPU by: {p.info['name']} \n Using: {p.info['cpu_percent']}")
 
+def ram_usage():
+    ram_usage = psutil.virtual_memory().percent
+
+    if(ram_usage >= 90):
+        print(Fore.RED +f"Warning high ram usage {ram_usage}")
+    else:
+        print(Fore.GREEN + f"RAM Usage: {ram_usage}")
+
+def cpu_usage():
+    cpu_usage = psutil.cpu_percent(1)
+    if(cpu_usage >= 85):
+        print(Fore.RED + f"Warning high cpu usage {cpu_usage}")
+    else:
+        print(Fore.GREEN + f"CPU usage: {cpu_usage}")
+
+def disk_usage():
+    disk_usage = psutil.disk_usage('/').percent
+    if disk_usage > 80:
+        print(Fore.RED + f"Warning: High disk usage {disk_usage}")
+    elif disk_usage > 60:
+        print(Fore.YELLOW + f"Disk usage moderate: {disk_usage}")
+    else:
+        print(Fore.GREEN + f"Disk usage: {disk_usage}")
+
+def core_usage():
+    if(hasattr, "getloadavg"):
+
+        load1, load5, load15 = psutil.getloadavg()
+        core_count = os.cpu_count()
+        if load1 > core_count:
+            print(Fore.RED + f"Warning: High system load - Load(1min): {load1:.2f} > CPU Cores: {core_count}")
+        elif load1 > core_count * 0.7:
+            print(Fore.YELLOW + f"Load moderate: {load1:.2f} (1 min avg)")
+        else:
+            print(Fore.GREEN + f"Load average (1, 5, 15 min): {load1:.2f}, {load5:.2f}, {load15:.2f}")
+    else:
+        print("Load average not supported on this OS.")   
+
 features = {
-    'cpu': lambda: print(f"CPU usage: {psutil.cpu_percent(1)}%"),
+    'cpu': cpu_usage,
     
-    'ram': lambda: print(f"RAM usage: {psutil.virtual_memory().percent}"),
+    'ram': ram_usage,
     
-    'disk': lambda: print(f"Disk usage: {psutil.disk_usage('/').percent}"),
+    'disk': disk_usage,
     
     'uptime':  get_system_uptime,
     
-    'avgl': lambda: print(f"Load average (1, 5, 15 min): {psutil.getloadavg()}") ,#else print("Load average not supported on this OS."),
+    'avgl': core_usage,
     
     'mcpu':  print_most_cpu_usage
 }
