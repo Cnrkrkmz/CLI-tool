@@ -5,6 +5,7 @@ import psutil
 import time
 import ctypes
 import platform
+import GPUtil
 from colorama import Fore, Style, init
 
 init(autoreset=True)
@@ -17,6 +18,7 @@ parser.add_argument('--disk', action='store_true', help='Shows disk usage')
 parser.add_argument('--uptime', action='store_true', help='Shows returns system boot time')
 parser.add_argument('--avgl', action='store_true', help='Shows average system load')
 parser.add_argument('--mcpu',action='store_true', help='Shows most used cpu process (must be used as sudo)')
+parser.add_argument('--gpu', action='store_true', help='Shows activity and degree of gpu')
 
 args = parser.parse_args()
 
@@ -112,6 +114,20 @@ def core_usage():
     else:
         print("Load average not supported on this OS.")   
 
+def gpu_usage_windows():
+
+    gpus= GPUtil.getGPUs()
+    for gpu in gpus:
+        usage = gpu.load * 100
+        temp = gpu.temperature
+        if usage > 90:
+            print(Fore.RED + f"GPU {gpu.name} - Usage: {usage:.1f}% | Temp: {temp}°C")
+        elif usage > 60:
+            print(Fore.YELLOW + f"GPU {gpu.name} - Usage: {usage:.1f}% | Temp: {temp}°C")
+        else:  
+            print(Fore.GREEN + f"GPU {gpu.name} - Usage: {usage:.1f}% | Temp: {temp}°C")
+
+
 features = {
     'cpu': cpu_usage,
     
@@ -123,7 +139,9 @@ features = {
     
     'avgl': core_usage,
     
-    'mcpu':  print_most_cpu_usage
+    'mcpu':  print_most_cpu_usage,
+
+    'gpu': gpu_usage_windows
 }
 
 for feature, action in features.items():
