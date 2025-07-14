@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse
+#import argparse
 import os
 import psutil 
 import time
@@ -10,17 +10,17 @@ from colorama import Fore, Style, init
 
 init(autoreset=True)
 
-parser = argparse.ArgumentParser(description='System monitoring tool')
+#parser = argparse.ArgumentParser(description='System monitoring tool')
 
-parser.add_argument('--cpu', action='store_true', help='Shows CPU usage')
-parser.add_argument('--ram', action='store_true', help='Shows RAM usage')
-parser.add_argument('--disk', action='store_true', help='Shows disk usage')
-parser.add_argument('--uptime', action='store_true', help='Shows returns system boot time')
-parser.add_argument('--avgl', action='store_true', help='Shows average system load')
-parser.add_argument('--mcpu',action='store_true', help='Shows most used cpu process (must be used as sudo)')
-parser.add_argument('--gpu', action='store_true', help='Shows activity and degree of gpu')
+#parser.add_argument('--cpu', action='store_true', help='Shows CPU usage')
+#parser.add_argument('--ram', action='store_true', help='Shows RAM usage')
+#parser.add_argument('--disk', action='store_true', help='Shows disk usage')
+#parser.add_argument('--uptime', action='store_true', help='Shows returns system boot time')
+#parser.add_argument('--avgl', action='store_true', help='Shows average system load')
+#parser.add_argument('--mcpu',action='store_true', help='Shows most used cpu process (must be used as sudo)')
+#parser.add_argument('--gpu', action='store_true', help='Shows activity and degree of gpu')
 
-args = parser.parse_args()
+#args = parser.parse_args()
 
 def get_system_uptime():
 
@@ -60,21 +60,28 @@ def get_system_uptime():
         print("Unsupported OS.")
 
 def print_most_cpu_usage():
-    
+
     for p in psutil.process_iter():
-        p.cpu_percent(None)
+        try:
+            p.cpu_percent(None)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
 
     time.sleep(1)
 
     util = list(psutil.process_iter(['pid', 'name', 'cpu_percent']))
     new_util = []
     for p in util:
-        if p.info['cpu_percent'] is not None:
-            new_util.append(p)
+        try:
 
-    top_util = sorted(new_util, key=lambda p: p.info['cpu_percent'], reverse=True) [:10]
+            if p.info['cpu_percent'] is not None:
+                new_util.append(p)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+
+    top_util = sorted(new_util, key=lambda p: p.info['cpu_percent'], reverse=True) [:5]
     for p in top_util:
-        print(f"Most used CPU by: {p.info['name']} \n Using: {p.info['cpu_percent']}")
+        print(f"CPU used by: {p.info['name']} \n Using: {p.info['cpu_percent']}")
 
 def ram_usage():
     ram_usage = psutil.virtual_memory().percent
@@ -92,6 +99,15 @@ def cpu_usage():
         print(Fore.GREEN + f"CPU usage: {cpu_usage}")
 
 def disk_usage():
+    if platform.system() == "Windows":
+        windows_disk_usage= psutil.disk_usage("C://")
+        if disk_usage > 80:
+            print(Fore.RED + f"Warning: High disk usage {disk_usage}")
+        elif disk_usage > 60:
+            print(Fore.YELLOW + f"Disk usage moderate: {disk_usage}")
+        else:
+            print(Fore.GREEN + f"Disk usage: {disk_usage}")
+
     disk_usage = psutil.disk_usage('/').percent
     if disk_usage > 80:
         print(Fore.RED + f"Warning: High disk usage {disk_usage}")
@@ -101,7 +117,11 @@ def disk_usage():
         print(Fore.GREEN + f"Disk usage: {disk_usage}")
 
 def core_usage():
-    if(hasattr, "getloadavg"):
+    if platform.system() == "Windows":
+        print("Load average not supported on Windows.")
+        return
+    
+    if hasattr(psutil, "getloadavg"):
 
         load1, load5, load15 = psutil.getloadavg()
         core_count = os.cpu_count()
@@ -114,7 +134,7 @@ def core_usage():
     else:
         print("Load average not supported on this OS.")   
 
-def gpu_usage_windows():
+def gpu_usage_windows_nvidia():
 
     gpus= GPUtil.getGPUs()
     for gpu in gpus:
@@ -141,9 +161,13 @@ features = {
     
     'mcpu':  print_most_cpu_usage,
 
-    'gpu': gpu_usage_windows
+    'gpu': gpu_usage_windows_nvidia
 }
 
+
 for feature, action in features.items():
-    if getattr(args, feature):
-        action()
+    print(f"\n======{feature.upper()}======\n")
+    action()
+
+if platform.system() == "Windows":
+    os.system("pause")
