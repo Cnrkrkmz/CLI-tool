@@ -24,6 +24,7 @@ init(autoreset=True)
 
 def get_system_uptime():
 
+    print("======UPTIME======")
     system=platform.system()
     if(system == "Linux"):
         t = os.popen('uptime -p').read()[:-1]
@@ -61,6 +62,7 @@ def get_system_uptime():
 
 def print_most_cpu_usage():
 
+    print("======M-CPU======")
     for p in psutil.process_iter():
         try:
             p.cpu_percent(None)
@@ -84,6 +86,8 @@ def print_most_cpu_usage():
         print(f"CPU used by: {p.info['name']} \n Using: {p.info['cpu_percent']}")
 
 def ram_usage():
+
+    print("======RAM======")
     ram_usage = psutil.virtual_memory().percent
 
     if(ram_usage >= 90):
@@ -92,6 +96,8 @@ def ram_usage():
         print(Fore.GREEN + f"RAM Usage: {ram_usage}")
 
 def cpu_usage():
+
+    print("======CPU======")
     cpu_usage = psutil.cpu_percent(1)
     if(cpu_usage >= 85):
         print(Fore.RED + f"Warning high cpu usage {cpu_usage}")
@@ -99,24 +105,28 @@ def cpu_usage():
         print(Fore.GREEN + f"CPU usage: {cpu_usage}")
 
 def disk_usage():
+
+    print("======DISK======")
     if platform.system() == "Windows":
         windows_disk_usage= psutil.disk_usage("C://")
-        if disk_usage > 80:
-            print(Fore.RED + f"Warning: High disk usage {disk_usage}")
-        elif disk_usage > 60:
-            print(Fore.YELLOW + f"Disk usage moderate: {disk_usage}")
+        if windows_disk_usage > 80:
+            print(Fore.RED + f"Warning: High disk usage {windows_disk_usage}")
+        elif windows_disk_usage > 60:
+            print(Fore.YELLOW + f"Disk usage moderate: {windows_disk_usage}")
         else:
-            print(Fore.GREEN + f"Disk usage: {disk_usage}")
+            print(Fore.GREEN + f"Disk usage: {windows_disk_usage}")
 
-    disk_usage = psutil.disk_usage('/').percent
-    if disk_usage > 80:
-        print(Fore.RED + f"Warning: High disk usage {disk_usage}")
-    elif disk_usage > 60:
-        print(Fore.YELLOW + f"Disk usage moderate: {disk_usage}")
+    usage = psutil.disk_usage('/').percent
+    if usage > 80:
+        print(Fore.RED + f"Warning: High disk usage {usage}")
+    elif usage > 60:
+        print(Fore.YELLOW + f"Disk usage moderate: {usage}")
     else:
-        print(Fore.GREEN + f"Disk usage: {disk_usage}")
+        print(Fore.GREEN + f"Disk usage: {usage}")
 
 def core_usage():
+
+    print("======Load-Average======")
     if platform.system() == "Windows":
         print("Load average not supported on Windows.")
         return
@@ -136,6 +146,7 @@ def core_usage():
 
 def gpu_usage_windows_nvidia():
 
+    print("======GPU-USAGE======")
     gpus= GPUtil.getGPUs()
     for gpu in gpus:
         usage = gpu.load * 100
@@ -147,6 +158,25 @@ def gpu_usage_windows_nvidia():
         else:  
             print(Fore.GREEN + f"GPU {gpu.name} - Usage: {usage:.1f}% | Temp: {temp}°C")
 
+def keep_live():
+    try:
+        while True:
+
+            os.system("cls" if platform.system() == "Windows" else "clear")
+            print(f"--- Sistem Durumu (Her 2 saniyede bir güncelleniyor) ---")
+            print(f"--- Çıkmak için Ctrl+C'ye basın ---\n")
+
+            cpu_usage()
+            ram_usage()
+            disk_usage()
+            get_system_uptime()
+            core_usage()
+            print_most_cpu_usage()
+            gpu_usage_windows_nvidia()
+
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print(Fore.CYAN + "\nÇıkılıyor...")
 
 features = {
     'cpu': cpu_usage,
@@ -161,13 +191,15 @@ features = {
     
     'mcpu':  print_most_cpu_usage,
 
-    'gpu': gpu_usage_windows_nvidia
+    'gpu': gpu_usage_windows_nvidia,
+
+    'live': keep_live
 }
 
+if __name__ == "__main__":
+    keep_live()
 
-for feature, action in features.items():
-    print(f"\n======{feature.upper()}======\n")
-    action()
+    if platform.system() == "Windows":
+        os.system("pause")
 
-if platform.system() == "Windows":
-    os.system("pause")
+      
