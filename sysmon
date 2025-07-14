@@ -146,7 +146,7 @@ def core_usage():
 
 def gpu_usage_windows_nvidia():
 
-    print("======GPU-USAGE======")
+    print("======GPU-USAGE======\n")
     gpus= GPUtil.getGPUs()
     for gpu in gpus:
         usage = gpu.load * 100
@@ -171,10 +171,9 @@ def keep_live():
             disk_usage()
             get_system_uptime()
             core_usage()
-            print_most_cpu_usage()
             gpu_usage_windows_nvidia()
 
-            time.sleep(2)
+            time.sleep(3)
     except KeyboardInterrupt:
         print(Fore.CYAN + "\nÇıkılıyor...")
 
