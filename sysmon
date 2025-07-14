@@ -163,7 +163,7 @@ def keep_live():
         while True:
 
             os.system("cls" if platform.system() == "Windows" else "clear")
-            print(f"--- Sistem Durumu (Her 2 saniyede bir güncelleniyor) ---")
+            print(f"--- Sistem Durumu (Her 3 saniyede bir güncelleniyor) ---")
             print(f"--- Çıkmak için Ctrl+C'ye basın ---\n")
 
             cpu_usage()
@@ -172,6 +172,7 @@ def keep_live():
             get_system_uptime()
             core_usage()
             gpu_usage_windows_nvidia()
+            print_most_cpu_usage()
 
             time.sleep(3)
     except KeyboardInterrupt:
