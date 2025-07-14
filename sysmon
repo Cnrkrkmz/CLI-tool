@@ -6,6 +6,7 @@ import time
 import ctypes
 import platform
 import GPUtil
+import datetime
 from colorama import Fore, Style, init
 
 init(autoreset=True)
@@ -32,13 +33,14 @@ def get_system_uptime():
 
     
     elif(system == "Windows"):
-        lib = ctypes.windll.kernel32
-        t = lib.GetTickCount64()
-        t = int(str(t)[:-3])
-        mins, sec = divmod(t, 60)
-        hour, mins = divmod(mins, 60)
-        days, hour = divmod(hour, 24)
-        print(f"{days} days, {hour:02}:{mins:02}:{sec:02}")
+        
+        boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
+        now = datetime.datetime.now()
+        uptime = now - boot_time
+        days = uptime.days
+        hours, remainder = divmod(uptime.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        print(f"{days} days, {hours:02}:{minutes:02}:{seconds:02}")
 
     elif(system == "Darwin"):
         t = os.popen('uptime').read()
@@ -108,7 +110,7 @@ def disk_usage():
 
     print("======DISK======")
     if platform.system() == "Windows":
-        windows_disk_usage= psutil.disk_usage("C://")
+        windows_disk_usage= psutil.disk_usage("C://").percent
         if windows_disk_usage > 80:
             print(Fore.RED + f"Warning: High disk usage {windows_disk_usage}")
         elif windows_disk_usage > 60:
@@ -201,5 +203,3 @@ if __name__ == "__main__":
 
     if platform.system() == "Windows":
         os.system("pause")
-
-      
