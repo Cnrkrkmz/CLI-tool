@@ -218,6 +218,3 @@ features = {
 }
 
 
-
-if platform.system() == "Windows":
-    os.system("pause")
