@@ -1,6 +1,6 @@
 # macOS system file
 .DS_Store
-
+system.icns
 # pyinstaller output
 /dist/
 /build/
